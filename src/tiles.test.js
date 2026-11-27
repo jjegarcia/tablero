@@ -33,3 +33,19 @@ test('tiles can be placed, moved and returned without replacing other tiles', ()
   assert.throws(() => placeTile({}, first, 225), RangeError)
   assert.throws(() => placeTile({}, 'missing', 0), /Unknown tile/)
 })
+
+test('tiles move between board and temporary grid without duplicates or overwriting', () => {
+  const first = tiles[0].id
+  const second = tiles[1].id
+  const onBoard = placeTile({}, first, 0)
+  const temporary = placeTile(onBoard, first, 0, 'temporary')
+  assert.deepEqual(temporary, { 'temporary-0': first })
+  const occupied = placeTile(temporary, second, 1, 'temporary')
+  assert.equal(placeTile(occupied, first, 1, 'temporary'), occupied)
+  const backOnBoard = placeTile(occupied, first, 224)
+  assert.deepEqual(backOnBoard, { 224: first, 'temporary-1': second })
+  assert.deepEqual(returnTile(backOnBoard, second), { 224: first })
+  assert.deepEqual(placeTile({}, first, 15, 'temporary'), { 'temporary-15': first })
+  assert.throws(() => placeTile({}, first, 16, 'temporary'), RangeError)
+  assert.throws(() => placeTile({}, first, 0, 'unknown'), /Unknown area/)
+})

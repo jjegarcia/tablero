@@ -22,12 +22,59 @@ h1 {
   font-size: 1.5rem;
 }
 
+.grids {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1.5rem;
+  max-width: 100%;
+}
+
 .board-layout {
   --board-size: min(80vw, 600px, calc(100vw - 4.5rem));
 
   display: grid;
   grid-template-columns: 1.5rem var(--board-size);
   grid-template-rows: 1.5rem var(--board-size);
+}
+
+.temporary-section {
+  width: min(320px, 100%);
+}
+
+.temporary-section h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.temporary-grid {
+  overflow: hidden;
+  border: 1px solid #aeb8c8;
+  border-radius: 0.375rem;
+  background: #e7e8d2;
+}
+
+.temporary-row {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.temporary-cell {
+  display: grid;
+  min-width: 0;
+  aspect-ratio: 1;
+  place-items: center;
+  border-right: 1px solid #9fa99b;
+  border-bottom: 1px solid #9fa99b;
+}
+
+.temporary-cell:last-child {
+  border-right: 0;
+}
+
+.temporary-row:last-child .temporary-cell {
+  border-bottom: 0;
 }
 
 .column-labels,
@@ -220,6 +267,10 @@ h1 {
 .tile--selected {
   outline: 3px solid #234f9b;
   outline-offset: -3px;
+}
+
+.tile--dragging {
+  opacity: 0;
 }
 
 .tile-points {

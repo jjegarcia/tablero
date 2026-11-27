@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { getSquareType, gridSize } from './board.js'
-import { placeTile, returnTile, tiles } from './tiles.js'
+import { cellKey, placeTile, returnTile, temporaryColumns, temporaryRows, tiles } from './tiles.js'
 import './style.css'
 
 const squareLabels = {
@@ -16,7 +16,7 @@ function Board() {
   const [placements, setPlacements] = useState({})
   const [selectedId, setSelectedId] = useState(null)
   const [drag, setDrag] = useState(null)
-  const [message, setMessage] = useState('Select a tile, then select an empty square, or drag a tile onto the board.')
+  const [message, setMessage] = useState('Select a tile, then select an empty square, or drag it to a grid.')
   const pointer = useRef(null)
   const suppressClick = useRef(false)
   const tileById = Object.fromEntries(tiles.map((tile) => [tile.id, tile]))
@@ -36,14 +36,18 @@ function Board() {
     setMessage(selected ? `${tileName(tile)} selected. Choose an empty square.` : 'Tile deselected.')
   }
 
-  function moveTile(tileId, cellIndex) {
-    if (placements[cellIndex] && placements[cellIndex] !== tileId) {
+  function moveTile(tileId, cellIndex, area = 'board') {
+    const key = cellKey(cellIndex, area)
+    if (placements[key] && placements[key] !== tileId) {
       setMessage('That square is occupied. Choose an empty square.')
       return
     }
-    setPlacements((current) => placeTile(current, tileId, cellIndex))
+    setPlacements((current) => placeTile(current, tileId, cellIndex, area))
     setSelectedId(null)
-    setMessage(`${tileName(tileById[tileId])} placed at ${String.fromCharCode(65 + Math.floor(cellIndex / gridSize))}${cellIndex % gridSize + 1}.`)
+    const location = area === 'board'
+      ? `${String.fromCharCode(65 + Math.floor(cellIndex / gridSize))}${cellIndex % gridSize + 1}`
+      : `temporary row ${Math.floor(cellIndex / temporaryColumns) + 1}, column ${cellIndex % temporaryColumns + 1}`
+    setMessage(`${tileName(tileById[tileId])} placed at ${location}.`)
   }
 
   function onPointerDown(event, tile) {
@@ -71,9 +75,9 @@ function Board() {
     window.setTimeout(() => { suppressClick.current = false }, 0)
     const cell = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-cell-index]')
     if (cell) {
-      moveTile(active.tileId, Number(cell.dataset.cellIndex))
+      moveTile(active.tileId, Number(cell.dataset.cellIndex), cell.dataset.area)
     } else {
-      setMessage('Drop the tile on a board square.')
+      setMessage('Drop the tile on an empty grid square.')
     }
   }
 
@@ -81,7 +85,7 @@ function Board() {
     return (
       <button
         type="button"
-        className={`tile${coordinate ? ' tile--board' : ''}${selectedId === tile.id ? ' tile--selected' : ''}`}
+        className={`tile${coordinate ? ' tile--board' : ''}${selectedId === tile.id ? ' tile--selected' : ''}${drag?.tileId === tile.id ? ' tile--dragging' : ''}`}
         aria-label={`${tileName(tile)}${coordinate ? `, at ${coordinate}` : ''}`}
         aria-pressed={selectedId === tile.id}
         onClick={() => selectTile(tile)}
@@ -99,6 +103,7 @@ function Board() {
   return (
     <main className="board-page">
       <h1>Tablero</h1>
+      <div className="grids">
       <div className="board-layout">
         <div className="column-labels" aria-hidden="true">
           {Array.from({ length: gridSize }, (_, column) => (
@@ -125,6 +130,7 @@ function Board() {
                     className={`board-cell board-cell--${type}`}
                     role="gridcell"
                     data-cell-index={cellIndex}
+                    data-area="board"
                     key={column}
                   >
                     {tile ? tileButton(tile, coordinate) : (
@@ -147,12 +153,42 @@ function Board() {
           ))}
         </div>
       </div>
+      <section className="temporary-section" aria-labelledby="temporary-heading">
+        <h2 id="temporary-heading">Temporary tiles</h2>
+        <div className="temporary-grid" role="grid" aria-label="Temporary tile grid, 2 rows and 8 columns">
+          {Array.from({ length: temporaryRows }, (_, row) => (
+            <div className="temporary-row" role="row" key={row}>
+              {Array.from({ length: temporaryColumns }, (_, column) => {
+                const cellIndex = row * temporaryColumns + column
+                const tile = tileById[placements[cellKey(cellIndex, 'temporary')]]
+                const coordinate = `temporary row ${row + 1}, column ${column + 1}`
+                return (
+                  <div className="temporary-cell" role="gridcell" data-cell-index={cellIndex} data-area="temporary" key={column}>
+                    {tile ? tileButton(tile, coordinate) : (
+                      <button
+                        type="button"
+                        className="cell-target"
+                        aria-label={coordinate}
+                        onClick={() => {
+                          if (selectedId) moveTile(selectedId, cellIndex, 'temporary')
+                          else setMessage('Select a tile first.')
+                        }}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      </section>
+      </div>
       <section className="tile-section" aria-labelledby="tiles-heading">
         <div className="tile-heading">
           <h2 id="tiles-heading">Spanish tiles</h2>
           <span>{tiles.length - placedIds.size} remaining</span>
         </div>
-        <p className="instructions">Select a tile and an empty square, or drag a tile onto the board.</p>
+        <p className="instructions">Select a tile and an empty square, or drag a tile to either grid.</p>
         <p className="status" role="status">{message}</p>
         <button
           type="button"

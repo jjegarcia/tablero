@@ -19,20 +19,30 @@ export const tiles = spanishTileDistribution.flatMap(([letter, points, count]) =
   })),
 )
 
-export function placeTile(placements, tileId, cellIndex) {
+export const temporaryColumns = 8
+export const temporaryRows = 2
+
+export function cellKey(cellIndex, area = 'board') {
+  const size = area === 'board' ? gridSize * gridSize : area === 'temporary' ? temporaryColumns * temporaryRows : null
+  if (size === null) throw new Error(`Unknown area: ${area}`)
+  if (!Number.isInteger(cellIndex) || cellIndex < 0 || cellIndex >= size) {
+    throw new RangeError(`Invalid cell: ${cellIndex}`)
+  }
+  return area === 'board' ? String(cellIndex) : `temporary-${cellIndex}`
+}
+
+export function placeTile(placements, tileId, cellIndex, area = 'board') {
   if (!tiles.some((tile) => tile.id === tileId)) {
     throw new Error(`Unknown tile: ${tileId}`)
   }
-  if (!Number.isInteger(cellIndex) || cellIndex < 0 || cellIndex >= gridSize * gridSize) {
-    throw new RangeError(`Invalid cell: ${cellIndex}`)
-  }
-  if (placements[cellIndex] && placements[cellIndex] !== tileId) return placements
+  const key = cellKey(cellIndex, area)
+  if (placements[key] && placements[key] !== tileId) return placements
 
   const next = { ...placements }
   for (const [cell, id] of Object.entries(next)) {
     if (id === tileId) delete next[cell]
   }
-  next[cellIndex] = tileId
+  next[key] = tileId
   return next
 }
 
