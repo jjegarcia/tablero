@@ -1,0 +1,51 @@
+import { gridSize } from './board.js'
+
+export const spanishTileDistribution = [
+  ['A', 1, 12], ['B', 3, 2], ['C', 3, 4], ['CH', 5, 1],
+  ['D', 2, 5], ['E', 1, 12], ['F', 4, 1], ['G', 2, 2],
+  ['H', 4, 2], ['I', 1, 6], ['J', 8, 1], ['L', 1, 4],
+  ['LL', 8, 1], ['M', 3, 2], ['N', 1, 5], ['Ñ', 8, 1],
+  ['O', 1, 9], ['P', 3, 2], ['Q', 5, 1], ['R', 1, 5],
+  ['RR', 8, 1], ['S', 1, 6], ['T', 1, 4], ['U', 1, 5],
+  ['V', 4, 1], ['X', 8, 1], ['Y', 4, 1], ['Z', 10, 1],
+  ['', 0, 2],
+]
+
+export const tiles = spanishTileDistribution.flatMap(([letter, points, count]) =>
+  Array.from({ length: count }, (_, index) => ({
+    id: `${letter || 'blank'}-${index}`,
+    letter,
+    points,
+  })),
+)
+
+export const temporaryColumns = 8
+export const temporaryRows = 2
+
+export function cellKey(cellIndex, area = 'board') {
+  const size = area === 'board' ? gridSize * gridSize : area === 'temporary' ? temporaryColumns * temporaryRows : null
+  if (size === null) throw new Error(`Unknown area: ${area}`)
+  if (!Number.isInteger(cellIndex) || cellIndex < 0 || cellIndex >= size) {
+    throw new RangeError(`Invalid cell: ${cellIndex}`)
+  }
+  return area === 'board' ? String(cellIndex) : `temporary-${cellIndex}`
+}
+
+export function placeTile(placements, tileId, cellIndex, area = 'board') {
+  if (!tiles.some((tile) => tile.id === tileId)) {
+    throw new Error(`Unknown tile: ${tileId}`)
+  }
+  const key = cellKey(cellIndex, area)
+  if (placements[key] && placements[key] !== tileId) return placements
+
+  const next = { ...placements }
+  for (const [cell, id] of Object.entries(next)) {
+    if (id === tileId) delete next[cell]
+  }
+  next[key] = tileId
+  return next
+}
+
+export function returnTile(placements, tileId) {
+  return Object.fromEntries(Object.entries(placements).filter(([, id]) => id !== tileId))
+}
