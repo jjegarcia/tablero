@@ -11,7 +11,7 @@ body {
   box-sizing: border-box;
   display: grid;
   min-height: 100vh;
-  place-content: center;
+  align-content: start;
   justify-items: center;
   gap: 1rem;
   padding: 1.5rem;
@@ -59,6 +59,7 @@ h1 {
   display: grid;
   grid-column: 2;
   grid-row: 2;
+  grid-template-rows: repeat(15, minmax(0, 1fr));
   width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
@@ -71,11 +72,13 @@ h1 {
 .board-row {
   display: grid;
   grid-template-columns: repeat(15, minmax(0, 1fr));
+  min-height: 0;
 }
 
 .board-cell {
   display: grid;
   min-width: 0;
+  min-height: 0;
   place-items: center;
   border-right: 1px solid #9fa99b;
   border-bottom: 1px solid #9fa99b;
@@ -83,6 +86,24 @@ h1 {
   color: #172033;
   font-size: clamp(0.5rem, 1.5vw, 0.7rem);
   font-weight: 700;
+}
+
+.cell-target {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cell-target:focus-visible,
+.tile:focus-visible,
+.return-button:focus-visible {
+  outline: 2px solid #172033;
+  outline-offset: -2px;
 }
 
 .board-cell--triple-word {
@@ -112,4 +133,105 @@ h1 {
 
 .board-row:last-child .board-cell {
   border-bottom: 0;
+}
+
+.tile-section {
+  box-sizing: border-box;
+  width: min(100%, 624px);
+}
+
+.tile-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.tile-heading h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.tile-heading span,
+.instructions,
+.status {
+  color: #536176;
+  font-size: 0.875rem;
+}
+
+.instructions {
+  margin: 0.5rem 0;
+}
+
+.status {
+  min-height: 1.25rem;
+  margin: 0.5rem 0;
+}
+
+.return-button {
+  margin-bottom: 0.75rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid #8794a7;
+  border-radius: 0.25rem;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+}
+
+.return-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tile-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.tile,
+.drag-preview {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #a68b60;
+  border-radius: 0.2rem;
+  background: #f2d9a8;
+  color: #302414;
+  font: 700 1rem system-ui, sans-serif;
+  box-shadow: inset 0 -2px 0 rgb(110 76 31 / 20%);
+}
+
+.tile {
+  cursor: grab;
+  touch-action: none;
+}
+
+.tile--board {
+  width: 90%;
+  height: 90%;
+  font-size: clamp(0.55rem, 2vw, 1rem);
+}
+
+.tile--selected {
+  outline: 3px solid #234f9b;
+  outline-offset: -3px;
+}
+
+.tile-points {
+  position: absolute;
+  right: 0.12em;
+  bottom: 0.02em;
+  font-size: 0.55em;
+}
+
+.drag-preview {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
 }
